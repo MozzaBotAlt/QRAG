@@ -21,4 +21,16 @@ pnpm install
 pnpm dev
 ```
 
-The artwork catalog currently lives in `app/api/artworks/route.ts`, making it easy to replace the in-memory collection with a database or CMS later.
+## Camera scanning
+
+Use **USE CAMERA** on a secure origin (`https://` or localhost), then allow camera access when the browser asks. The scanner uses the browser's native `BarcodeDetector` API. If unsupported, enter the work ID manually.
+
+## Connect your backend
+
+Copy `.env.example` to `.env.local` and set:
+
+```bash
+ART_BACKEND_URL=https://your-backend.example.com/artworks
+```
+
+Your endpoint receives `?id=QAW-001` and should return JSON containing `id`, `title`, `artist`, `year`, `medium`, `description`, `image`, and `accent`. The local route proxies this request, so the backend URL stays server-side.

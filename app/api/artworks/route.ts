@@ -8,6 +8,17 @@ const artworks = [
 
 export async function GET(request: Request) {
   const id = new URL(request.url).searchParams.get('id')?.trim().toUpperCase()
+  const backendUrl = process.env.ART_BACKEND_URL?.trim()
+
+  if (backendUrl) {
+    try {
+      const upstream = await fetch(`${backendUrl.replace(/\/$/, '')}?id=${encodeURIComponent(id ?? '')}`, { cache: 'no-store' })
+      return new NextResponse(await upstream.text(), { status: upstream.status, headers: { 'content-type': upstream.headers.get('content-type') ?? 'application/json' } })
+    } catch {
+      return NextResponse.json({ error: 'Artwork backend unavailable' }, { status: 502 })
+    }
+  }
+
   const artwork = artworks.find((item) => item.id === id)
   return artwork ? NextResponse.json(artwork) : NextResponse.json({ error: 'Artwork not found' }, { status: 404 })
 }

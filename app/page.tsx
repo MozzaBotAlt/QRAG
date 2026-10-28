@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Camera, CircleHelp, Menu, ScanLine, Sparkles, X } from 'lucide-react'
 
 type Artwork = { id: string; title: string; artist: string; year: string; medium: string; description: string; image: string; accent: string }
@@ -17,6 +17,10 @@ export default function Page() {
   const [code, setCode] = useState('')
   const [message, setMessage] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [cameraOpen, setCameraOpen] = useState(false)
+  const [cameraMessage, setCameraMessage] = useState('')
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   async function lookup(value: string) {
     const clean = value.trim().toUpperCase()
@@ -37,6 +41,54 @@ export default function Page() {
     setCode(id)
     lookup(id)
   }
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach((track) => track.stop())
+    streamRef.current = null
+    setCameraOpen(false)
+  }
+
+  async function startCamera() {
+    if (!('BarcodeDetector' in window)) {
+      setCameraMessage('QR scanning is not supported in this browser. Enter the work ID instead.')
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+      streamRef.current = stream
+      setCameraOpen(true)
+      setCameraMessage('Point your camera at a QR code.')
+      requestAnimationFrame(() => {
+        if (videoRef.current) videoRef.current.srcObject = stream
+      })
+    } catch {
+      setCameraMessage('Camera access was blocked. Allow camera permission or enter the work ID instead.')
+    }
+  }
+
+  useEffect(() => {
+    if (!cameraOpen || !videoRef.current || !('BarcodeDetector' in window)) return
+    const detector = new (window as Window & { BarcodeDetector: new (options?: { formats: string[] }) => { detect: (source: HTMLVideoElement) => Promise<Array<{ rawValue?: string }>> } }).BarcodeDetector({ formats: ['qr_code'] })
+    let active = true
+    const scan = async () => {
+      if (!active || !videoRef.current || videoRef.current.readyState < 2) return active && requestAnimationFrame(scan)
+      try {
+        const codes = await detector.detect(videoRef.current)
+        const value = codes[0]?.rawValue
+        if (value) {
+          setCode(value)
+          stopCamera()
+          lookup(value)
+          return
+        }
+      } catch { /* camera frames can briefly be unavailable */ }
+      if (active) requestAnimationFrame(scan)
+    }
+    const frame = requestAnimationFrame(scan)
+    return () => { active = false; cancelAnimationFrame(frame) }
+  }, [cameraOpen])
+
+  useEffect(() => () => { streamRef.current?.getTracks().forEach((track) => track.stop()) }, [])
 
   return (
     <main className="site-shell">
@@ -65,7 +117,7 @@ export default function Page() {
         <div className="section-label"><span>01</span><span>IDENTIFY A WORK</span></div>
         <div className="scanner-grid">
           <div className="scanner-card">
-            <div className="scanner-visual"><div className="scan-corners" /><div className="scan-line" /><Camera /></div>
+            <div className="scanner-visual"><div className="scan-corners" /><div className="scan-line" /><Camera /><button className="camera-trigger" onClick={startCamera} type="button">USE CAMERA</button></div>
             <div className="scanner-details"><div><p className="eyebrow">READY TO DISCOVER?</p><h2>Point your camera<br />at the QR mark.</h2></div><p className="scanner-note">Your browser camera can scan supported QR codes. Or enter a work ID below.</p></div>
             <div className="lookup-row"><label htmlFor="art-code">WORK ID</label><input id="art-code" value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) lookup(code) }} placeholder="QAW-001" /><button onClick={() => lookup(code)}>LOOK UP <ArrowUpRight /></button></div>
             {message && <p className="form-message" role="status">{message}</p>}
@@ -82,6 +134,8 @@ export default function Page() {
       <section id="about" className="about-section"><div className="section-label"><span>03</span><span>WHY THIS EXISTS</span></div><h2>Art should never<br /><em>lose its context.</em></h2><p>QR Art World is a small, open index for the people, process, and perspective hidden behind the finished image.</p><a className="text-link" href="#scan">Start exploring <ArrowUpRight /></a></section>
 
       <footer><a href="#top" className="wordmark"><span className="mark">/</span><span>QR ART<br /><b>WORLD</b></span></a><p>THE ARTWORK IS THE MESSAGE.<br />THE QR IS THE INVITATION.</p><span>© 2025 / QAW</span></footer>
+
+      {cameraOpen && <div className="modal-backdrop" role="presentation"><article className="camera-modal" role="dialog" aria-modal="true" aria-label="Scan QR code"><button className="close-modal" onClick={stopCamera} aria-label="Close camera"><X /></button><video ref={videoRef} autoPlay muted playsInline /><p className="eyebrow">LIVE QR SCANNER</p><p>{cameraMessage}</p></article></div>}
 
       {selected && <div className="modal-backdrop" role="presentation" onClick={() => setSelected(null)}><article className="art-modal" role="dialog" aria-modal="true" aria-label={`${selected.title} by ${selected.artist}`} onClick={(e) => e.stopPropagation()}><button className="close-modal" onClick={() => setSelected(null)} aria-label="Close artwork details"><X /></button><img src={selected.image} alt={selected.title} /><div className="modal-copy"><p className="eyebrow">{selected.id} / ARTWORK IDENTIFIED</p><h2>{selected.title}</h2><p className="artist-name">{selected.artist} <span>/{selected.year}</span></p><p>{selected.description}</p><small>{selected.medium}</small></div></article></div>}
     </main>
