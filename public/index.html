@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101616">
+    <title>Student Art Archive — Gallery</title>
+    <link rel="stylesheet" href="/artwork-app.css">
+    <script src="/artwork-gallery.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/">STUDENT ART <span>ARCHIVE</span></a>
+      <nav aria-label="Main navigation">
+        <a class="active" href="/index.html">Gallery</a>
+        <a href="/upload.html">Add artwork</a>
+      </nav>
+    </header>
+    <main class="page-wrap">
+      <section class="page-heading">
+        <p class="eyebrow">A COMMUNITY COLLECTION</p>
+        <h1>Made by students.<br><em>Shared with everyone.</em></h1>
+        <p class="lede">Explore artwork from our student community. Scan a work's QR label to open its story anywhere.</p>
+        <a class="button button-primary" href="/upload.html">Share your artwork <span aria-hidden="true">↗</span></a>
+      </section>
+      <section aria-labelledby="gallery-title" class="gallery-section">
+        <div class="section-title">
+          <div><p class="eyebrow">THE ARCHIVE</p><h2 id="gallery-title">Recent artwork</h2></div>
+          <p id="gallery-status" role="status" aria-live="polite">Loading the collection…</p>
+        </div>
+        <div id="artwork-grid" class="artwork-grid"></div>
+      </section>
+    </main>
+    <footer><span>STUDENT ART ARCHIVE</span><a href="/upload.html">Contribute a work ↗</a></footer>
+  </body>
+</html>

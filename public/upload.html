@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101616">
+    <title>Add Artwork — Student Art Archive</title>
+    <link rel="stylesheet" href="/artwork-app.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+    <script src="/artwork-upload.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/">STUDENT ART <span>ARCHIVE</span></a>
+      <nav aria-label="Main navigation">
+        <a href="/index.html">Gallery</a>
+        <a class="active" href="/upload.html">Add artwork</a>
+      </nav>
+    </header>
+    <main class="page-wrap upload-layout">
+      <section class="page-heading upload-heading">
+        <p class="eyebrow">ADD TO THE ARCHIVE</p>
+        <h1>Your art deserves<br><em>a lasting link.</em></h1>
+        <p class="lede">Share a compressed image and a little context. We'll create a digital artwork page and a printable QR label for it.</p>
+      </section>
+      <div class="upload-columns">
+        <form id="artwork-form" class="panel upload-form">
+          <label class="field-label" for="title">Artwork title <span aria-hidden="true">*</span></label>
+          <input id="title" name="title" maxlength="160" required placeholder="e.g. Garden after rain">
+
+          <label class="field-label" for="description">Description</label>
+          <textarea id="description" name="description" maxlength="5000" rows="5" placeholder="Tell us about the materials, idea, or story behind your work."></textarea>
+
+          <label class="field-label" for="image">Artwork image <span aria-hidden="true">*</span></label>
+          <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" required>
+          <p class="field-help">JPEG, PNG, or WebP. The image is resized and compressed in your browser before upload.</p>
+          <div id="image-preview" class="image-preview" hidden></div>
+          <button id="submit-button" class="button button-primary submit-button" type="submit">Upload artwork <span aria-hidden="true">↗</span></button>
+          <p id="upload-status" class="status-message" role="status" aria-live="polite"></p>
+        </form>
+
+        <section id="qr-result" class="panel qr-panel" aria-labelledby="qr-title" hidden>
+          <p class="eyebrow">YOUR WORK IS IN THE ARCHIVE</p>
+          <h2 id="qr-title">QR label</h2>
+          <p class="field-help">Print this label or save the QR image and place it beside your artwork.</p>
+          <div id="print-label" class="print-label">
+            <div id="qr-code" aria-label="QR code for this artwork"></div>
+            <p id="qr-art-title" class="label-title"></p>
+            <p id="qr-art-id" class="label-id"></p>
+          </div>
+          <div class="qr-actions">
+            <button id="download-qr" class="button button-secondary" type="button">Download QR</button>
+            <button id="print-qr" class="button button-secondary" type="button">Print label</button>
+          </div>
+          <a id="open-artwork" class="text-link" href="#">Open artwork page ↗</a>
+        </section>
+      </div>
+    </main>
+    <footer><span>STUDENT ART ARCHIVE</span><a href="/index.html">Back to gallery ↗</a></footer>
+  </body>
+</html>

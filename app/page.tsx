@@ -29,11 +29,21 @@ export default function Page() {
     try {
       const response = await fetch(`/api/artworks?id=${encodeURIComponent(clean)}`)
       if (!response.ok) throw new Error('Not found')
-      const artwork = await response.json()
+      const result = await response.json()
+      const artwork: Artwork = {
+        id: result.qr_id || result.id,
+        title: result.title,
+        artist: result.artist || 'Student artist',
+        year: result.year || '',
+        medium: result.medium || '',
+        description: result.description || '',
+        image: result.image_url || result.image,
+        accent: result.accent || 'cyan',
+      }
       setSelected(artwork)
       setMessage('Artwork identified.')
     } catch {
-      setMessage('No artwork matched that code. Try QAW-001, QAW-002, or QAW-003.')
+      setMessage('No artwork matched that code. Check the QR ID and try again.')
     }
   }
 
@@ -97,6 +107,7 @@ export default function Page() {
         <nav className={menuOpen ? 'nav-links is-open' : 'nav-links'} aria-label="Primary navigation">
           <a href="#scan" onClick={() => setMenuOpen(false)}>Scan a work</a>
           <a href="#gallery" onClick={() => setMenuOpen(false)}>The archive</a>
+          <a href="/upload.html" onClick={() => setMenuOpen(false)}>Add artwork</a>
           <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
         </nav>
         <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle navigation">{menuOpen ? <X /> : <Menu />}</button>

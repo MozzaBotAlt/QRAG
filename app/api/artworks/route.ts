@@ -7,18 +7,55 @@ const artworks = [
 ]
 
 export async function GET(request: Request) {
-  const id = new URL(request.url).searchParams.get('id')?.trim().toUpperCase()
+  const id = new URL(request.url).searchParams.get('id')?.trim()
   const backendUrl = process.env.ART_BACKEND_URL?.trim()
 
   if (backendUrl) {
     try {
-      const upstream = await fetch(`${backendUrl.replace(/\/$/, '')}?id=${encodeURIComponent(id ?? '')}`, { cache: 'no-store' })
+      const url = new URL(backendUrl)
+      if (id) url.searchParams.set('id', id)
+      const upstream = await fetch(url, { cache: 'no-store' })
       return new NextResponse(await upstream.text(), { status: upstream.status, headers: { 'content-type': upstream.headers.get('content-type') ?? 'application/json' } })
-    } catch {
+    } catch (error) {
+      console.error('Artwork backend GET failed', error)
       return NextResponse.json({ error: 'Artwork backend unavailable' }, { status: 502 })
     }
   }
 
-  const artwork = artworks.find((item) => item.id === id)
-  return artwork ? NextResponse.json(artwork) : NextResponse.json({ error: 'Artwork not found' }, { status: 404 })
+  if (!id) {
+    return NextResponse.json(artworks.map((artwork) => ({
+      qr_id: artwork.id,
+      title: artwork.title,
+      description: artwork.description,
+      image_url: artwork.image,
+    })))
+  }
+
+  const artwork = artworks.find((item) => item.id === id.toUpperCase())
+  return artwork ? NextResponse.json({
+    ...artwork,
+    qr_id: artwork.id,
+    image_url: artwork.image,
+  }) : NextResponse.json({ error: 'Artwork not found' }, { status: 404 })
+}
+
+export async function POST(request: Request) {
+  const backendUrl = process.env.ART_BACKEND_URL?.trim()
+  if (!backendUrl) {
+    return NextResponse.json({ error: 'Artwork uploads are not configured' }, { status: 503 })
+  }
+
+  try {
+    const upstream = await fetch(backendUrl, {
+      method: 'POST',
+      body: await request.formData(),
+    })
+    return new NextResponse(await upstream.text(), {
+      status: upstream.status,
+      headers: { 'content-type': upstream.headers.get('content-type') ?? 'application/json' },
+    })
+  } catch (error) {
+    console.error('Artwork backend POST failed', error)
+    return NextResponse.json({ error: 'Artwork backend unavailable' }, { status: 502 })
+  }
 }
